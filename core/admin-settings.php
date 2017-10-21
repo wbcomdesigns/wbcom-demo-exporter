@@ -2,15 +2,12 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
-
 if ( ! class_exists( 'WBCOM_TDE_ADMIN_SETTINGS' ) ) :
-
 /**
  * @class WBCOM_TDE_ADMIN_SETTINGS
  * @version	1.0.0
  */
 class WBCOM_TDE_ADMIN_SETTINGS {
-	
 	/**
 	 * The single instance of the class.
 	 *
@@ -20,7 +17,6 @@ class WBCOM_TDE_ADMIN_SETTINGS {
 	protected static $_instance = null;
 	protected static $_slug = 'wbcom-theme-demo-exporter';
 	protected static $_parent_dir = 'wbcom-theme-demos';
-	
 	/**
 	 * Main WBCOM_TDE_ADMIN_SETTINGS Instance.
 	 *
@@ -37,15 +33,12 @@ class WBCOM_TDE_ADMIN_SETTINGS {
 		}
 		return self::$_instance;
 	}
-
-	
 	/**
 	 * WBCOM_TDE_ADMIN_SETTINGS Constructor.
 	 */
 	public function __construct() {
 		$this->init_hooks();
 	}
-
 	/**
 	 * Hook into actions and filters.
 	 * @since  1.0.0
@@ -54,7 +47,6 @@ class WBCOM_TDE_ADMIN_SETTINGS {
 		add_action( 'admin_menu', array( $this, 'add_admin_menu' ), 10 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
 	}
-
 	public function add_admin_menu() {
 		add_menu_page(
 			$page_title	=	__( 'Theme Exporter', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ),
@@ -66,28 +58,22 @@ class WBCOM_TDE_ADMIN_SETTINGS {
 			$position	=	null
 		);
 	}
-
 	public function render_page_for_added_menu() {
 		$theme_info = wp_get_theme();
 		$reflection = new ReflectionClass( $theme_info );
 		$property = $reflection->getProperty( 'headers' );
 		$property->setAccessible(true);
 		$theme_info = $property->getValue( $theme_info );
-
 		$pre_selected = false;
 		if( $pre_selected ) {
-			$pre_selected = 'selected';
+			$pre_selected = 'selected="selected"';
 		}
 		else {
 			$pre_selected = '';
 		}
-		
 		echo "<div class='wrap'>";
-
 			echo "<form method='post'>";
-
 				echo "<table class='wp-list-table widefat fixed striped'>";
-
 					echo "<tr>";
 						echo "<td>";
 							echo "<h3><label>" . __( 'Theme Name', 'ASDF' ) . "</label></h3>";
@@ -96,7 +82,6 @@ class WBCOM_TDE_ADMIN_SETTINGS {
 							echo "<input type='text' name='theme_slug' value='" . $theme_info['Name'] . "' readonly />";
 						echo "</td>";
 					echo "</tr>";
-
 					echo "<tr>";
 						echo "<td>";
 							echo "<h3><label>" . __( 'Demo Name', 'ASDF' ) . "</label></h3>";
@@ -105,7 +90,6 @@ class WBCOM_TDE_ADMIN_SETTINGS {
 							echo "<input type='text' name='demo_slug' value='' />";
 						echo "</td>";
 					echo "</tr>";
-
 					echo "<tr>";
 						echo "<td>";
 							echo "<h3><label>" . __( 'Demo Screenshot', 'ASDF' ) . "</label></h3>";
@@ -119,7 +103,6 @@ class WBCOM_TDE_ADMIN_SETTINGS {
 							echo '<input type="button" class="wbcom_demo_exporter-upload-button button" value="'. __( 'Upload Image', 'ASDF' ). '" />';
 						echo "</td>";
 					echo "</tr>";
-					
 					echo "<tr>";
 						echo "<td>";
 							echo "<h3><label>" . __( 'Select Post Types', 'ASDF' ) . "</label></h3>";
@@ -143,12 +126,12 @@ class WBCOM_TDE_ADMIN_SETTINGS {
 							echo "</select>";
 						echo "</td>";
 					echo "</tr>";
-
 					echo "<tr>";
 						echo "<td>";
 							echo "<h3><label>" . __( 'Select Database Tables', 'ASDF' ) . "</label></h3>";
 						echo "</td>";
 						echo "<td>";
+							$pre_selected = 'selected="selected"';
 							global $wpdb;
 							$sql = defined( 'DB_NAME' ) ? "SHOW TABLES FROM ".DB_NAME : "SHOW TABLES LIKE '%'";
 							$results = $wpdb->get_results( $sql );
@@ -166,12 +149,12 @@ class WBCOM_TDE_ADMIN_SETTINGS {
 							echo "</select>";
 						echo "</td>";
 					echo "</tr>";
-
 					echo "<tr>";
 						echo "<td>";
 							echo "<h3><label>" . __( 'Select Plugins', 'ASDF' ) . "</label></h3>";
 						echo "</td>";
 						echo "<td>";
+							$pre_selected = '';
 							$plugins = get_plugins();
 							echo "<select name='selected_plugins[]' class='wbcom-demo-exporter-select2' multiple>";
 							foreach ( $plugins as $key => $value ) {
@@ -180,12 +163,12 @@ class WBCOM_TDE_ADMIN_SETTINGS {
 							echo "</select>";
 						echo "</td>";
 					echo "</tr>";
-
 					echo "<tr>";
 						echo "<td>";
 							echo "<h3><label>" . __( 'Select Uploads Folder', 'ASDF' ) . "</label></h3>";
 						echo "</td>";
 						echo "<td>";
+							$pre_selected = 'selected="selected"';
 							$upload = wp_upload_dir();
 							$upload_dir = $upload['basedir'];
 							$folders = array_diff( scandir( $upload_dir ), array( '..', '.' ) );
@@ -196,22 +179,15 @@ class WBCOM_TDE_ADMIN_SETTINGS {
 							echo "</select>";
 						echo "</td>";
 					echo "</tr>";
-
 				echo "</table>";
-
 				echo "<input type='submit' name='wbcom_generate_theme_demo_data' value='". __( 'Generate', 'ASDF' ) ."' class='button button-primary' />";
-
 			echo "</form>";
-
 		echo "</div>";
 	}
-
 	public function admin_enqueue_scripts() {
 		$screen = get_current_screen();
 		if ( $screen->id != 'toplevel_page_wbcom-theme-demo-exporter' ) { return; }
-
 		wp_enqueue_media();
-		
 		wp_register_script(
 			$handle		=	'wbcom_theme_demo_exporter_select2_js',
 			$src		=	WBCOM_Theme_Demo_Exporter_PLUGIN_DIR_URL . 'assets/js/select2.min.js',
@@ -227,7 +203,6 @@ class WBCOM_TDE_ADMIN_SETTINGS {
 			)
 		);
 		wp_enqueue_script( 'wbcom_theme_demo_exporter_select2_js' );
-
 		wp_register_style(
 			$handle		=	'wbcom_theme_demo_exporter_select2_css',
 			$src		=	WBCOM_Theme_Demo_Exporter_PLUGIN_DIR_URL . 'assets/css/select2.min.css',
@@ -237,11 +212,8 @@ class WBCOM_TDE_ADMIN_SETTINGS {
 		);
 		wp_enqueue_style( 'wbcom_theme_demo_exporter_select2_css' );
 	}
-
 }
-
 endif;
-
 /**
  * Main instance of WBCOM_TDE_ADMIN_SETTINGS.
  * @since  1.0.0
