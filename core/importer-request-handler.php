@@ -47,6 +47,31 @@ class WBCOM_TDE_Importer_Request_Handler {
 	}
 	public function importer_request_handler() {
 		if( isset( $_GET['wbcom_theme_demo_listing'] ) && ( $_GET['wbcom_theme_demo_listing'] == 'yes' ) ) {
+
+			if( isset( $_POST['theme_slug'] ) && isset( $_POST['demo_slug'] ) && isset( $_POST['plugins_list'] ) ) {
+				$theme_slug = $_POST['theme_slug'];
+				$demo_slug = $_POST['demo_slug'];
+				$upload = wp_upload_dir();
+				$upload_dir_url = $upload['baseurl'] . '/';
+				$upload_dir_url = $upload_dir_url . self::$_parent_dir . '/' . $theme_slug . '/'. $demo_slug . '/';
+				$file_url = $upload_dir_url . '/plugins.json';
+				// $retrieved_data = file_get_contents( $file_url );
+
+				$response = wp_remote_get( $file_url, array( 'timeout' => 120 ) );
+				$retrieved_data = array();
+				if ( !is_wp_error( $response ) ) {
+					if ( isset( $response['response']['code'] ) &&  ( $response['response']['code'] == 200 ) ) {
+						$response = isset( $response['body'] ) ? $response['body'] : '';
+						if( !empty( $response ) ) {
+							$retrieved_data = $response;
+						}
+					}
+				}
+
+				echo $retrieved_data;
+				die();
+			}
+
 			if( isset( $_POST['theme_name'] ) ) {
 				$theme_name = trim( $_POST['theme_name'] );
 				$theme_name = sanitize_title( $theme_name );
@@ -72,7 +97,9 @@ class WBCOM_TDE_Importer_Request_Handler {
 				}
 				
 				echo json_encode( $retrieved_data );
+				die();
 			}
+			
 			if( isset( $_POST['theme_slug'] ) && isset( $_POST['demo_slug'] ) ) {
 				$theme_slug = $_POST['theme_slug'];
 				$demo_slug = $_POST['demo_slug'];
@@ -90,9 +117,6 @@ class WBCOM_TDE_Importer_Request_Handler {
 					}
 				}
 				echo $retrieved_data;
-				
-				// $retrieved_data = file_get_contents( $file_url );
-				// echo $retrieved_data;
 			}
 			die();
 		}

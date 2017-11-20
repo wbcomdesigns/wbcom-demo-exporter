@@ -45,7 +45,7 @@ class WBCOM_TDE_ADMIN_SETTINGS {
 	 */
 	private function init_hooks() {
 		add_action( 'admin_menu', array( $this, 'add_admin_menu' ), 10 );
-		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ), 100 );
 	}
 	public function add_admin_menu() {
 		add_menu_page(

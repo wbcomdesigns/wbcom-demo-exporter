@@ -128,16 +128,28 @@ class WBCOM_TDE_Generate_Demo_Data {
 		$installer_info['package'] = $this->get_theme_demo_location( 'url' );
 		$url_to_request = $this->get_theme_demo_location( 'url', $locationTill = 'parent' );
 		$url_to_request .= 'installer.json';
-		$retrieved_data = file_get_contents( $url_to_request );
-		if( !empty( $retrieved_data ) ) {
-			$retrieved_data = json_decode( $retrieved_data, true );
-			if( empty( $retrieved_data ) && !is_array( $retrieved_data ) ) {
-				$retrieved_data = array();
+		// $retrieved_data = file_get_contents( $url_to_request );
+		// if( !empty( $retrieved_data ) ) {
+		// 	$retrieved_data = json_decode( $retrieved_data, true );
+		// 	if( empty( $retrieved_data ) && !is_array( $retrieved_data ) ) {
+		// 		$retrieved_data = array();
+		// 	}
+		// }
+		// else {
+		// 	$retrieved_data = array();
+		// }
+
+		$response = wp_remote_get( $url_to_request, array( 'timeout' => 120 ) );
+		$retrieved_data = array();
+		if ( !is_wp_error( $response ) ) {
+			if ( isset( $response['response']['code'] ) &&  ( $response['response']['code'] == 200 ) ) {
+				$response = isset( $response['body'] ) ? $response['body'] : '';
+				if( !empty( $response ) ) {
+					$retrieved_data = json_decode( $response, true );
+				}
 			}
 		}
-		else {
-			$retrieved_data = array();
-		}
+
 		if( !array_key_exists( $theme_slug, $retrieved_data ) ) {
 			$retrieved_data[$theme_slug] = array();
 		}
@@ -286,6 +298,128 @@ class WBCOM_TDE_Generate_Demo_Data {
 		/* making package.json file :: end */
 
 
+		/* making plugins.json file :: start */
+		$plugins_info = array(
+			array(
+				"name" => "Buddypress",
+				"slug" => "buddypress",
+				"required" => true,
+				"version" => "2.3.2.1",
+				"force_activation" => false,
+				"force_deactivation" => false,
+				"external_url" => "",
+				"description" => "BuddyPress adds community features to WordPress. Member Profiles, Activity Streams, Direct Messaging, Notifications, and more!"
+			),
+			array(
+				"name" => "bbPress",
+				"slug" => "bbpress",
+				"required" => true,
+				"version" => "2.3.2.1",
+				"force_activation" => false,
+				"force_deactivation" => false,
+				"external_url" => "",
+				"description" => "bbPress is forum software with a twist from the creators of WordPress."
+			),
+			array(
+				"name" => "BP Create Group Type",
+				"slug" => "bp-create-group-type",
+				"required" => true,
+				"version" => "2.3.2.1",
+				"force_activation" => false,
+				"force_deactivation" => false,
+				"external_url" => "",
+				"description" => "This plugin adds a new feature to BuddyPress, Group Types. This allows an easy categorization of BP Groups."
+			),
+			array(
+				"name" => "Elementor",
+				"slug" => "elementor",
+				"required" => true,
+				"version" => "2.3.2.1",
+				"force_activation" => false,
+				"force_deactivation" => false,
+				"external_url" => "",
+				"description" => "The most advanced frontend drag & drop page builder. Create high-end, pixel perfect websites at record speeds. Any theme, any page, any design."
+			),
+			array(
+				"name" => "Ninja Forms",
+				"slug" => "ninja-forms",
+				"required" => true,
+				"version" => "3.2.4",
+				"force_activation" => false,
+				"force_deactivation" => false,
+				"external_url" => "",
+				"description" => "Ninja Forms is a webform builder with unparalleled ease of use and features."
+			),
+			array(
+				"name" => "rtMedia for WordPress, BuddyPress and bbPress",
+				"slug" => "buddypress-media",
+				"required" => true,
+				"version" => "2.3.2.1",
+				"force_activation" => false,
+				"force_deactivation" => false,
+				"external_url" => "",
+				"description" => "This plugin adds missing media rich features like photos, videos and audio uploading to BuddyPress which are essential if you are building social network, seriously!"
+			),
+			array(
+				"name"	=> "WooCommerce",
+				"slug"	=> "woocommerce",
+				"required"	=> true,
+				"version"	=> "2.3.2.1",
+				"force_activation"	=> false,
+				"force_deactivation"	=> false,
+				"external_url"	=> "",
+				"description"	=> "Build any type of community website with member profiles, activity streams, user groups, messaging, and more."
+			),
+			array(
+				"name"	=> "WordPress Social Login",
+				"slug"	=> "wordpress-social-login",
+				"required"	=> true,
+				"version"	=> "2.3.2.1",
+				"force_activation"	=> false,
+				"force_deactivation"	=> false,
+				"external_url"	=> "",
+				"description"	=> "Allow your visitors to comment and login with social networks such as Twitter, Facebook, Google, Yahoo and more."
+			),
+			array(
+				"name"	=> "Yoast SEO",
+				"slug"	=> "wordpress-seo",
+				"required"	=> false,
+				"version"	=> "2.3.2.1",
+				"force_activation"	=> false,
+				"force_deactivation"	=> false,
+				"external_url"	=> "",
+				"description"	=> "The first true all-in-one SEO solution for WordPress, including on-page content analysis, XML sitemaps and much more."
+			),
+			array(
+				"name"	=> "UpdraftPlus WordPress Backup Plugin",
+				"slug"	=> "updraftplus",
+				"required"	=> false,
+				"version"	=> "2.3.2.1",
+				"force_activation"	=> false,
+				"force_deactivation"	=> false,
+				"external_url"	=> "",
+				"description"	=> "UpdraftPlus simplifies backups and restoration. It is the world’s highest ranking and most popular scheduled backup plugin, with over a million currently-active installs."
+			),
+			array(
+				"name"	=> "iThemes Security (formerly Better WP Security)",
+				"slug"	=> "better-wp-security",
+				"required"	=> false,
+				"version"	=> "2.3.2.1",
+				"force_activation"	=> false,
+				"force_deactivation"	=> false,
+				"external_url"	=> "",
+				"description"	=> "iThemes Security (formerly Better WP Security) gives you over 30+ ways to secure and protect your WordPress site."
+			),
+		);
+		$args = array(
+			'content'	=>	json_encode( $plugins_info, JSON_PRETTY_PRINT ),
+			'fileName'	=>	'plugins',
+			'fileExtension'	=>	'json',
+		);
+		$this->saveContentToDemoPackage( $args, $locationTill = 'demo' );
+		/* making plugins.json file :: end */
+
+
 		/* setting up installer.json file :: start */
 		$theme_slug = isset( $_POST['theme_slug'] ) ? $_POST['theme_slug'] : '';
 		$installer_info['theme_name'] = $theme_slug;
@@ -299,16 +433,29 @@ class WBCOM_TDE_Generate_Demo_Data {
 		$installer_info['package'] = $this->get_theme_demo_location( 'url' );
 		$url_to_request = $this->get_theme_demo_location( 'url', $locationTill = 'parent' );
 		$url_to_request .= 'installer.json';
-		$retrieved_data = file_get_contents( $url_to_request );
-		if( !empty( $retrieved_data ) ) {
-			$retrieved_data = json_decode( $retrieved_data, true );
-			if( empty( $retrieved_data ) && !is_array( $retrieved_data ) ) {
-				$retrieved_data = array();
+		// $retrieved_data = file_get_contents( $url_to_request );
+		// if( !empty( $retrieved_data ) ) {
+		// 	$retrieved_data = json_decode( $retrieved_data, true );
+		// 	if( empty( $retrieved_data ) && !is_array( $retrieved_data ) ) {
+		// 		$retrieved_data = array();
+		// 	}
+		// }
+		// else {
+		// 	$retrieved_data = array();
+		// }
+
+		$response = wp_remote_get( $url_to_request, array( 'timeout' => 120 ) );
+		$retrieved_data = array();
+		if ( !is_wp_error( $response ) ) {
+			if ( isset( $response['response']['code'] ) &&  ( $response['response']['code'] == 200 ) ) {
+				$response = isset( $response['body'] ) ? $response['body'] : '';
+				if( !empty( $response ) ) {
+					$retrieved_data = json_decode( $response, true );
+				}
 			}
 		}
-		else {
-			$retrieved_data = array();
-		}
+
+
 		if( !array_key_exists( $theme_slug, $retrieved_data ) ) {
 			$retrieved_data[$theme_slug] = array();
 		}
