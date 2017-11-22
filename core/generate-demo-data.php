@@ -331,6 +331,16 @@ class WBCOM_TDE_Generate_Demo_Data {
 				"description" => "This plugin adds a new feature to BuddyPress, Group Types. This allows an easy categorization of BP Groups."
 			),
 			array(
+				"name" => "BuddyPress Activity Social Share",
+				"slug" => "bp-activity-social-share",
+				"required" => true,
+				"version" => "2.3.2.1",
+				"force_activation" => false,
+				"force_deactivation" => false,
+				"external_url" => "",
+				"description" => "A perfect plugin to make your user activities on your website social-share-friendly, and increase your members social reach dramatically!"
+			),
+			array(
 				"name" => "Elementor",
 				"slug" => "elementor",
 				"required" => true,
@@ -339,6 +349,16 @@ class WBCOM_TDE_Generate_Demo_Data {
 				"force_deactivation" => false,
 				"external_url" => "",
 				"description" => "The most advanced frontend drag & drop page builder. Create high-end, pixel perfect websites at record speeds. Any theme, any page, any design."
+			),
+			array(
+				"name" => "SVG Support",
+				"slug" => "svg-support",
+				"required" => true,
+				"version" => "2.3.2.1",
+				"force_activation" => false,
+				"force_deactivation" => false,
+				"external_url" => "",
+				"description" => "Allow SVG file uploads using the WordPress Media Library uploader plus the ability to inline SVG files for direct styling/animation of SVG elements using CSS/JS."
 			),
 			array(
 				"name" => "Ninja Forms",
