@@ -301,6 +301,16 @@ class WBCOM_TDE_Generate_Demo_Data {
 		/* making plugins.json file :: start */
 		$plugins_info = array(
 			array(
+				"name" => "Wbcom Essential",
+				"slug" => "wbcom-essential",
+				"required" => true,
+				"version" => "1.0.0",
+				"force_activation" => false,
+				"force_deactivation" => false,
+				"external_url" => "https://www.dl.dropboxusercontent.com/s/sc7wpcv7pq5peyg/wbcom-essential.zip?dl=0",
+				"description" => "Wbcom Essential is the required plugin to use REIGN theme to its maximum extent."
+			),
+			array(
 				"name" => "Buddypress",
 				"slug" => "buddypress",
 				"required" => true,
@@ -324,7 +334,7 @@ class WBCOM_TDE_Generate_Demo_Data {
 				"name" => "BP Create Group Type",
 				"slug" => "bp-create-group-type",
 				"required" => true,
-				"version" => "2.3.2.1",
+				"version" => "1.0.4",
 				"force_activation" => false,
 				"force_deactivation" => false,
 				"external_url" => "",
