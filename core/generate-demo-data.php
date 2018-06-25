@@ -678,6 +678,21 @@ class WBCOM_TDE_Generate_Demo_Data {
 			while( !empty( $json_content ) );
 		}
 		/* making json data for database tables :: end */
+
+		/** code added to manage theme mod data :: start ***/
+		$theme_mods_data = get_theme_mods();
+		$json_content = json_encode( $theme_mods_data );
+		$database_table = 'theme_mods';
+		$counter = 1;
+		$args = array(
+			'content'	=>	$json_content,
+			'fileName'	=>	$database_table.$counter,
+			'fileExtension'	=>	'json',
+		);
+		$this->saveContentToDemoPackage( $args, $locationTill = 'demo' );
+		$json_urls[] = $upload_dir_url . $args['fileName'] . "." . $args['fileExtension'];
+		/** code added to manage theme mod data :: end ***/
+
 		return $json_urls;
 	}
 	public function make_xml_for_post_types() {
