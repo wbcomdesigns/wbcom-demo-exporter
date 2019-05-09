@@ -177,7 +177,7 @@ class WBCOM_TDE_Generate_Demo_Data {
 
 		/* demo directory setup :: first call to "get_theme_demo_location" function */
 		$this->initial_directory_setup();
-		
+
 		/* making xml data for post types :: start */
 		$package_info['post_types'] = $this->make_xml_for_post_types();
 		/* making xml data for post types :: end */
@@ -223,7 +223,7 @@ class WBCOM_TDE_Generate_Demo_Data {
 				$locationToCreate = $this->get_theme_demo_location( 'path' );
 				// $locationToCreate = $locationToCreate . $selected_parent_folder . '/';
 				$locationToPick = $upload_dir . $selected_parent_folder . '/';
-				
+
 
 				// $this->Zip( $folderToCompress = realpath($locationToPick), $whereToGetZipFile = $locationToCreate . './compressed.zip' );
 				// var_dump($folderToCompress);
@@ -243,7 +243,7 @@ class WBCOM_TDE_Generate_Demo_Data {
 				*/
 				$sourceFolder = $locationToPick;
 				$destinationFolder = $temp_folder_location;
-						
+
 				$files_n_folders = array_diff( scandir( $upload_dir . $selected_parent_folder ), array( '..', '.' ) );
 				foreach ( $files_n_folders as $key => $sub_folder ) {
 					if( is_dir( $upload_dir . $selected_parent_folder . '/' . $sub_folder ) ) {
@@ -264,7 +264,7 @@ class WBCOM_TDE_Generate_Demo_Data {
 							$counter++;
 						}
 						while( ( $thisFolderIsOver == false ) );
-						
+
 					}
 					else {
 
@@ -497,7 +497,7 @@ class WBCOM_TDE_Generate_Demo_Data {
 		);
 		$this->saveContentToDemoPackage( $args, $locationTill = 'parent' );
 		/* setting up installer.json file :: end */
-		
+
 	}
 
 	public function createParentZip( $sourceFolder = '', $destinationFolder = '', $folderToPick = '' ) {
@@ -507,7 +507,7 @@ class WBCOM_TDE_Generate_Demo_Data {
 		$wpUploadsFolder = wp_upload_dir();
 		$wpUploadsFolder = $wpUploadsFolder['basedir'];
 		$wpUploadsFolder = realpath( $wpUploadsFolder );
-		
+
 		$zip = new ZipArchive;
 		if ( $zip->open( $destinationFolder . "/$folderToPick.zip", ZipArchive::CREATE ) === TRUE ) {
 			// Create recursive directory iterator
@@ -546,10 +546,10 @@ class WBCOM_TDE_Generate_Demo_Data {
 		$sourceFolderLastFolderPath = $wpUploadsFolder . '/' . $sourceFolderLastFolderName . '/';
 		$wpUploadsFolder = realpath( $wpUploadsFolder );
 		$sourceFolderLastFolderPath = realpath( $sourceFolderLastFolderPath );
-		
+
 		$zip = new ZipArchive;
 		$totalFileSize = 0;
-		$maxSizeInBytes = 3888333;
+		$maxSizeInBytes = 6888333;
 		$hasMoreData = false;
 		$nameAsIdentifier = '';
 		$allowToAddToZip = true;
@@ -565,7 +565,7 @@ class WBCOM_TDE_Generate_Demo_Data {
 			);
 
 			foreach ( $files as $name => $file ) {
-				
+
 				if( !empty( $resultOfPrevOperation ) ) {
 					if( $resultOfPrevOperation == $name ) {
 						$allowToAddToZip = true;
@@ -575,7 +575,7 @@ class WBCOM_TDE_Generate_Demo_Data {
 				if( !$allowToAddToZip ) {
 					continue;
 				}
-			
+
 			    // Skip directories (they would be added automatically)
 			    if ( !$file->isDir() ) {
 			    	if( $maxSizeInBytes < $totalFileSize ) {
