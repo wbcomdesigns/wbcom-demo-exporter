@@ -659,9 +659,24 @@ class WBCOM_TDE_Generate_Demo_Data {
 				$json_content = $wpdb->get_results( $sql_query, ARRAY_A );
 				if( empty( $json_content ) ) { break; }
 				if( !empty( $json_content ) && is_array( $json_content ) ) {
-					$json_content = array_map( function( $value ) { return str_replace( home_url(), '{{*home_url}}', $value ); }, $json_content );
-					// $json_content = json_encode( $json_content, JSON_PRETTY_PRINT );
-					$json_content = json_encode( $json_content );
+					if ( $database_table == 'options') {
+						
+						foreach( $json_content as $content ){
+							if ( isset($content['option_value'])) {							
+								$option_value = maybe_unserialize($content['option_value']);
+								if ( is_array( $option_value )) {
+									$option_value = str_replace( get_site_url(), '{{*home_url}}', $option_value );
+									$content['option_value'] = maybe_serialize($option_value);
+								}							
+							}
+							$json_content_[] = $content;
+						}						
+						$json_content = json_encode( $json_content_ );
+					} else {
+						$json_content = array_map( function( $value ) { return str_replace( home_url(), '{{*home_url}}', $value ); }, $json_content );
+						// $json_content = json_encode( $json_content, JSON_PRETTY_PRINT );
+						$json_content = json_encode( $json_content );
+					}
 				}
 				else {
 					$json_content = '';
