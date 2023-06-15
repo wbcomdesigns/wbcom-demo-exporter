@@ -664,7 +664,7 @@ class WBCOM_TDE_Generate_Demo_Data {
 						foreach( $json_content as $content ){
 							if ( isset($content['option_value'])) {							
 								$option_value = maybe_unserialize($content['option_value']);
-								if ( is_array( $option_value )) {
+								if ( is_array( $option_value ) && is_string( $option_value ) ) {
 									$option_value = str_replace( get_site_url(), '{{*home_url}}', $option_value );
 									$content['option_value'] = maybe_serialize($option_value);
 								}							
