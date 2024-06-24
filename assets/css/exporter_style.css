@@ -1,0 +1,38 @@
+.wrap.reign-theme-exporter {
+    margin: 60px auto;
+    background-color: #fff;
+    border-radius: 20px;
+    padding: 20px;
+    max-width: 1300px;
+}
+
+.reign-theme-exporter table.wp-list-table,
+.reign-theme-exporter table.wp-list-table tr,
+.reign-theme-exporter table.wp-list-table td,
+.reign-theme-exporter table.wp-list-table {
+    background: transparent !important;
+    border: none;
+}
+
+.reign-theme-exporter .selected-folder {
+    margin-bottom: 20px;
+}
+
+.reign-theme-exporter .select2-container--default .select2-selection--multiple {
+    padding: 10px;
+    border-radius: 10px;
+    border-color: #ccc;
+}
+
+.reign-theme-exporter input.button.button-primary {
+    padding: 13px 28px;
+    font-size: 15px;
+    border-radius: 10px;
+    line-height: 1;
+}
+
+.reign-theme-exporter .selected-folder li.select2-selection__choice {
+    background: #eee !important;
+    border-color: #eeeeee !important;
+    padding: 3px 8px !important;
+}

@@ -71,103 +71,12 @@ class WBCOM_TDE_ADMIN_SETTINGS {
 		else {
 			$pre_selected = '';
 		}
-		echo "<div class='wrap'>";
+		echo "<div class='wrap reign-theme-exporter'>";
 			echo "<form method='post'>";
-				echo "<table class='wp-list-table widefat fixed striped'>";
-					echo "<tr>";
-						echo "<td>";
-							echo "<h3><label>" . __( 'Theme Name', 'ASDF' ) . "</label></h3>";
-						echo "</td>";
-						echo "<td>";
-							echo "<input type='text' name='theme_slug' value='" . $theme_info['Name'] . "' readonly />";
-						echo "</td>";
-					echo "</tr>";
-					echo "<tr>";
-						echo "<td>";
-							echo "<h3><label>" . __( 'Demo Name', 'ASDF' ) . "</label></h3>";
-						echo "</td>";
-						echo "<td>";
-							echo "<input type='text' name='demo_slug' value='' />";
-						echo "</td>";
-					echo "</tr>";
-					echo "<tr>";
-						echo "<td>";
-							echo "<h3><label>" . __( 'Demo Screenshot', 'ASDF' ) . "</label></h3>";
-						echo "</td>";
-						echo "<td>";
-							$image_inline_style = 'width:150px;height:150px;display:none;';
-							$remove_inline_style = 'display:none;';
-							echo '<input class="wbcom_demo_exporter_img_url" type="hidden" name="demo_screenshot" value="" />';
-							echo '<img class="wbcom_demo_exporter_img" src="" style="' . $image_inline_style . '" />';
-							echo '<a href="#" class="wbcom_demo_exporter-remove-file-button" rel="avatar_default_image" style="' . $remove_inline_style . '" >' .__('Remove Image','reign'). '</a>';
-							echo '<input type="button" class="wbcom_demo_exporter-upload-button button" value="'. __( 'Upload Image', 'ASDF' ). '" />';
-						echo "</td>";
-					echo "</tr>";
-					echo "<tr>";
-						echo "<td>";
-							echo "<h3><label>" . __( 'Select Post Types', 'ASDF' ) . "</label></h3>";
-						echo "</td>";
-						echo "<td>";
-							$allPostTypes = get_post_types(
-								$args = array(),
-								$output = 'object',
-								$operator = 'and'
-							);
-							$post_types = array();
-							if( !empty( $allPostTypes ) && is_array( $allPostTypes ) ) {
-								foreach ( $allPostTypes as $post_type ) {
-									$post_types[$post_type->name] = $post_type->label;
-								}
-							}
-							echo "<select name='selected_post_types[]' class='wbcom-demo-exporter-select2' multiple>";
-							foreach ( $post_types as $key => $value ) {
-								echo "<option value='$key' " . $pre_selected . ">" . $value . "</option>";
-							}
-							echo "</select>";
-						echo "</td>";
-					echo "</tr>";
-					echo "<tr>";
-						echo "<td>";
-							echo "<h3><label>" . __( 'Select Database Tables', 'ASDF' ) . "</label></h3>";
-						echo "</td>";
-						echo "<td>";
-							$pre_selected = 'selected="selected"';
-							global $wpdb;
-							$sql = defined( 'DB_NAME' ) ? "SHOW TABLES FROM ".DB_NAME : "SHOW TABLES LIKE '%'";
-							$results = $wpdb->get_results( $sql );
-							$db_tables = array();
-							foreach( $results as $key => $result ) {
-								foreach( $result as $table_name ) {
-									$table_name = str_replace( $wpdb->prefix, '', $table_name );
-									$db_tables[$table_name] = $table_name;
-								}
-							}
-							echo "<select name='selected_database_tables[]' class='wbcom-demo-exporter-select2' multiple>";
-							foreach ( $db_tables as $db_table ) {
-								echo "<option value='$db_table' " . $pre_selected . ">" . $db_table . "</option>";
-							}
-							echo "</select>";
-						echo "</td>";
-					echo "</tr>";
-					echo "<tr>";
-						echo "<td>";
-							echo "<h3><label>" . __( 'Select Plugins', 'ASDF' ) . "</label></h3>";
-						echo "</td>";
-						echo "<td>";
-							$pre_selected = '';
-							$plugins = get_plugins();
-							echo "<select name='selected_plugins[]' class='wbcom-demo-exporter-select2' multiple>";
-							foreach ( $plugins as $key => $value ) {
-								echo "<option value='$key' " . $pre_selected . ">" . $value['Name'] . "</option>";
-							}
-							echo "</select>";
-						echo "</td>";
-					echo "</tr>";
-					echo "<tr>";
-						echo "<td>";
-							echo "<h3><label>" . __( 'Select Uploads Folder', 'ASDF' ) . "</label></h3>";
-						echo "</td>";
-						echo "<td>";
+				echo "<div class='wp-list-table widefat fixed striped'>";
+					echo "<div class='select-folder'>";
+						echo "<h3><label>" . __( 'Select Uploads Folder', 'ASDF' ) . "</label></h3>";
+						echo "<div class='selected-folder'>";
 							$pre_selected = 'selected="selected"';
 							$upload = wp_upload_dir();
 							$upload_dir = $upload['basedir'];
@@ -177,9 +86,9 @@ class WBCOM_TDE_ADMIN_SETTINGS {
 								echo "<option value='$folder' " . $pre_selected . ">" . $folder . "</option>";
 							}
 							echo "</select>";
-						echo "</td>";
-					echo "</tr>";
-				echo "</table>";
+						echo "</div>";
+					echo "</div>";
+				echo "</div>";
 				echo "<input type='submit' name='wbcom_generate_theme_demo_data' value='". __( 'Generate', 'ASDF' ) ."' class='button button-primary' />";
 			echo "</form>";
 		echo "</div>";
@@ -211,6 +120,16 @@ class WBCOM_TDE_ADMIN_SETTINGS {
 			$media		=	'all'
 		);
 		wp_enqueue_style( 'wbcom_theme_demo_exporter_select2_css' );
+
+		wp_enqueue_script( 'wbcom_theme_demo_exporter_select2_js' );
+		wp_register_style(
+			$handle		=	'wbcom_theme_demo_exporter_style_css',
+			$src		=	WBCOM_Theme_Demo_Exporter_PLUGIN_DIR_URL . 'assets/css/exporter_style.css',
+			$deps		=	array(),
+			$ver		=	false,
+			$media		=	'all'
+		);
+		wp_enqueue_style( 'wbcom_theme_demo_exporter_style_css' );
 	}
 }
 endif;
