@@ -243,34 +243,34 @@ class WBCOM_TDE_Generate_Demo_Data {
 				*/
 				$sourceFolder = $locationToPick;
 				$destinationFolder = $temp_folder_location;
+				if ( is_dir($upload_dir . $selected_parent_folder) ) {
+					$files_n_folders = array_diff( scandir( $upload_dir . $selected_parent_folder ), array( '..', '.' ) );
+					foreach ( $files_n_folders as $key => $sub_folder ) {
+						if( is_dir( $upload_dir . $selected_parent_folder . '/' . $sub_folder ) ) {
+							$sourceFolder = $upload_dir . $selected_parent_folder . '/' . $sub_folder . '/';
+							$destinationFolder = $this->get_theme_demo_location( 'path' ) . $selected_parent_folder . '/';
 
-				$files_n_folders = array_diff( scandir( $upload_dir . $selected_parent_folder ), array( '..', '.' ) );
-				foreach ( $files_n_folders as $key => $sub_folder ) {
-					if( is_dir( $upload_dir . $selected_parent_folder . '/' . $sub_folder ) ) {
-						$sourceFolder = $upload_dir . $selected_parent_folder . '/' . $sub_folder . '/';
-						$destinationFolder = $this->get_theme_demo_location( 'path' ) . $selected_parent_folder . '/';
-
-						$thisFolderIsOver = false;
-						$resultOfPrevOperation = '';
-						$counter = 1;
-						do {
-							$resultOfPrevOperation = $this->createZip( $sourceFolder, $destinationFolder, $sub_folder . "-break-$counter", $resultOfPrevOperation );
-							if( empty( $resultOfPrevOperation ) ) {
-								$thisFolderIsOver = true;
+							$thisFolderIsOver = false;
+							$resultOfPrevOperation = '';
+							$counter = 1;
+							do {
+								$resultOfPrevOperation = $this->createZip( $sourceFolder, $destinationFolder, $sub_folder . "-break-$counter", $resultOfPrevOperation );
+								if( empty( $resultOfPrevOperation ) ) {
+									$thisFolderIsOver = true;
+								}
+								$upload_dir_url = $this->get_theme_demo_location( 'url' );
+								$upload_dir_url = $upload_dir_url . $selected_parent_folder . "/" . $sub_folder . "-break-$counter.zip";
+								$upload_dir_urls[] = $upload_dir_url;
+								$counter++;
 							}
-							$upload_dir_url = $this->get_theme_demo_location( 'url' );
-							$upload_dir_url = $upload_dir_url . $selected_parent_folder . "/" . $sub_folder . "-break-$counter.zip";
-							$upload_dir_urls[] = $upload_dir_url;
-							$counter++;
+							while( ( $thisFolderIsOver == false ) );
+
 						}
-						while( ( $thisFolderIsOver == false ) );
+						else {
 
-					}
-					else {
-
+						}
 					}
 				}
-
 				// $sourceFolder = $this->get_theme_demo_location( 'path' ) . $selected_parent_folder . '/';
 				// $destinationFolder = $this->get_theme_demo_location( 'path' );
 				// $sub_folder = $selected_parent_folder;
