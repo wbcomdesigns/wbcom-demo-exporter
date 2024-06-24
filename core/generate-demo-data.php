@@ -497,7 +497,16 @@ class WBCOM_TDE_Generate_Demo_Data {
 		);
 		$this->saveContentToDemoPackage( $args, $locationTill = 'parent' );
 		/* setting up installer.json file :: end */
+		add_action( 'admin_notices', [ $this, 'wbcom_export_zip_success'] );
 
+	}
+	
+	public function wbcom_export_zip_success() {
+		?>
+		<div id="setting-error-settings_updated" class="notice notice-success settings-error is-dismissible"> 
+			<p><strong><?php esc_html_e('Successfully export data.', 'wbcom-theme-demo-exporter');?></strong></p>			
+		</div>
+		<?php
 	}
 
 	public function createParentZip( $sourceFolder = '', $destinationFolder = '', $folderToPick = '' ) {
