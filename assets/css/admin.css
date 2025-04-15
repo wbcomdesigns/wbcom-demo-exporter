@@ -1,0 +1,148 @@
+/**
+ * Theme Demo Exporter Admin Styles
+ */
+
+/* Main container */
+.wbcom-theme-exporter-wrap {
+    margin: 20px 0;
+}
+
+.wbcom-exporter-description {
+    margin-bottom: 20px;
+    background: #fff;
+    padding: 15px 20px;
+    border-left: 4px solid #007cba;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+/* Card styling */
+.wbcom-exporter-card {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.wbcom-exporter-card h2 {
+    margin-top: 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+/* Form fields */
+.wbcom-form-fields {
+    margin-bottom: 20px;
+}
+
+.wbcom-form-field {
+    margin-bottom: 20px;
+}
+
+.wbcom-form-field label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.wbcom-form-field input[type="text"] {
+    width: 100%;
+    max-width: 400px;
+}
+
+.wbcom-form-field .description {
+    color: #666;
+    font-size: 13px;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+.wbcom-form-field label .required {
+    color: #dc3232;
+}
+
+/* Select2 customization */
+.wbcom-form-field .select2-container {
+    max-width: 600px;
+}
+
+/* Screenshot field */
+.screenshot-upload-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.wbcom_demo_exporter_img {
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    object-fit: cover;
+}
+
+.screenshot-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.wbcom_demo_exporter-remove-file-button {
+    color: #a00;
+    text-decoration: none;
+}
+
+.wbcom_demo_exporter-remove-file-button:hover {
+    color: #dc3232;
+    text-decoration: underline;
+}
+
+/* Export actions */
+.wbcom-export-actions {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+    display: flex;
+    align-items: center;
+}
+
+#wbcom-export-progress {
+    margin-left: 15px;
+    display: flex;
+    align-items: center;
+}
+
+#wbcom-export-progress .spinner {
+    float: none;
+    margin: 0 10px 0 0;
+}
+
+.progress-text {
+    color: #666;
+}
+
+/* Tips section */
+.wbcom-exporter-tips {
+    background: #f8f9fa;
+    border-left: 4px solid #007cba;
+    padding: 15px 20px;
+    margin-top: 20px;
+}
+
+.wbcom-exporter-tips h3 {
+    margin-top: 0;
+}
+
+.wbcom-exporter-tips ul {
+    list-style: disc;
+    margin-left: 20px;
+}
+
+/* Validation error */
+.validation-error {
+    border-color: #dc3232 !important;
+}
+
+/* Hidden elements */
+.hidden {
+    display: none !important;
+}
