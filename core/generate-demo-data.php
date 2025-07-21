@@ -72,30 +72,22 @@ class WBCOM_TDE_Generate_Demo_Data {
 	 * Main export function
 	 */
 	public function generate_theme_demo_data() {
-		// Debug logging
-		error_log( 'WBCOM Export: generate_theme_demo_data called' );
-		error_log( 'WBCOM Export: POST data: ' . print_r( $_POST, true ) );
 		
 		if ( ! isset( $_POST['wbcom_generate_theme_demo_data'] ) ) { 
-			error_log( 'WBCOM Export: No POST data found' );
 			return; 
 		}
 		
-		error_log( 'WBCOM Export: Starting export process' );
 		
 		// Security checks
 		if ( ! current_user_can( 'manage_options' ) ) {
-			error_log( 'WBCOM Export: Permission denied' );
 			wp_die( __( 'You do not have sufficient permissions to perform this action.', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ) );
 		}
 		
 		// Verify nonce
 		if ( ! isset( $_POST['_wpnonce'] ) || ! wp_verify_nonce( $_POST['_wpnonce'], 'wbcom_export_demo_nonce' ) ) {
-			error_log( 'WBCOM Export: Nonce verification failed' );
 			wp_die( __( 'Security check failed.', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ) );
 		}
 		
-		error_log( 'WBCOM Export: Security checks passed' );
 		
 		// Disable error display during export to prevent issues
 		$original_error_reporting = error_reporting();
@@ -112,7 +104,6 @@ class WBCOM_TDE_Generate_Demo_Data {
 		ob_start();
 		
 		try {
-			error_log( 'WBCOM Export: Starting try block' );
 			
 			// Start export tracking
 			update_option( 'wbcom_export_status', 'running' );
@@ -122,28 +113,19 @@ class WBCOM_TDE_Generate_Demo_Data {
 			$package_info = array();
 			
 			// Create fresh export directory
-			error_log( 'WBCOM Export: Creating export directory' );
 			$this->initial_directory_setup();
 			
 			// Export post types
-			error_log( 'WBCOM Export: Exporting post types' );
 			$package_info['post_types'] = $this->make_xml_for_post_types();
-			error_log( 'WBCOM Export: Post types exported: ' . count( $package_info['post_types'] ) );
 			
 			// Export database tables with proper indexing
-			error_log( 'WBCOM Export: Exporting database tables' );
 			$package_info['database_tables'] = $this->make_json_for_database_tables();
-			error_log( 'WBCOM Export: Database tables exported: ' . count( $package_info['database_tables'] ) );
 			
 			// Export plugins info
-			error_log( 'WBCOM Export: Getting plugins info' );
 			$package_info['plugins'] = $this->get_active_plugins_info();
-			error_log( 'WBCOM Export: Plugins found: ' . count( $package_info['plugins'] ) );
 			
 			// Export upload folders
-			error_log( 'WBCOM Export: Exporting upload folders' );
 			$package_info['upload_folders'] = $this->export_upload_folders();
-			error_log( 'WBCOM Export: Upload folders exported: ' . count( $package_info['upload_folders'] ) );
 			
 			// Set metadata
 			$package_info['created_on'] = date( 'Y-m-d H:i:s' );
@@ -168,7 +150,6 @@ class WBCOM_TDE_Generate_Demo_Data {
 			$this->save_plugins_json();
 			
 			// Update installer.json
-			error_log( 'WBCOM Export: Updating installer.json' );
 			$this->update_installer_json();
 			
 			// Save export history
@@ -177,9 +158,6 @@ class WBCOM_TDE_Generate_Demo_Data {
 			// Update last export time
 			update_option( 'wbcom_last_export_time', time() );
 			update_option( 'wbcom_export_status', 'completed' );
-			
-			error_log( 'WBCOM Export: Export completed successfully' );
-			error_log( 'WBCOM Export: Redirecting to: ' . add_query_arg( 'export_status', 'success', wp_get_referer() ) );
 			
 			// Clean output buffer
 			ob_end_clean();
@@ -194,8 +172,6 @@ class WBCOM_TDE_Generate_Demo_Data {
 			
 		} catch ( Exception $e ) {
 			// Handle errors
-			error_log( 'WBCOM Export: Error occurred: ' . $e->getMessage() );
-			error_log( 'WBCOM Export: Stack trace: ' . $e->getTraceAsString() );
 			
 			set_transient( 'wbcom_export_error', $e->getMessage(), 300 );
 			update_option( 'wbcom_export_status', 'failed' );
@@ -741,8 +717,6 @@ class WBCOM_TDE_Generate_Demo_Data {
 		$theme_slug = sanitize_title( $theme_slug );
 		$demo_slug = 'theme_demo';
 		
-		error_log( 'WBCOM Export: Theme slug: ' . $theme_slug );
-		
 		$installer_info = array(
 			'theme_name' => isset( $_POST['theme_slug'] ) ? $_POST['theme_slug'] : wp_get_theme()->get( 'Name' ),
 			'theme_slug' => $theme_slug,
@@ -780,8 +754,6 @@ class WBCOM_TDE_Generate_Demo_Data {
 			'fileExtension' => 'json',
 		);
 		$this->saveContentToDemoPackage( $args, 'parent' );
-		
-		error_log( 'WBCOM Export: installer.json saved to: ' . $this->get_theme_demo_location( 'path', 'parent' ) . 'installer.json' );
 	}
 	
 	/**
