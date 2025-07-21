@@ -97,9 +97,19 @@ class WBCOM_TDE_Generate_Demo_Data {
 		
 		error_log( 'WBCOM Export: Security checks passed' );
 		
+		// Disable error display during export to prevent issues
+		$original_error_reporting = error_reporting();
+		$original_display_errors = ini_get('display_errors');
+		@error_reporting(E_ERROR | E_PARSE);
+		@ini_set('display_errors', 0);
+		@ini_set('display_startup_errors', 0);
+		
 		// Increase limits for large exports
 		@set_time_limit( 0 );
 		@ini_set( 'memory_limit', '512M' );
+		
+		// Start output buffering to catch any warnings
+		ob_start();
 		
 		try {
 			error_log( 'WBCOM Export: Starting try block' );
@@ -171,6 +181,13 @@ class WBCOM_TDE_Generate_Demo_Data {
 			error_log( 'WBCOM Export: Export completed successfully' );
 			error_log( 'WBCOM Export: Redirecting to: ' . add_query_arg( 'export_status', 'success', wp_get_referer() ) );
 			
+			// Clean output buffer
+			ob_end_clean();
+			
+			// Restore original error settings
+			@error_reporting($original_error_reporting);
+			@ini_set('display_errors', $original_display_errors);
+			
 			// Redirect with success message
 			wp_redirect( add_query_arg( 'export_status', 'success', wp_get_referer() ) );
 			exit;
@@ -182,6 +199,13 @@ class WBCOM_TDE_Generate_Demo_Data {
 			
 			set_transient( 'wbcom_export_error', $e->getMessage(), 300 );
 			update_option( 'wbcom_export_status', 'failed' );
+			
+			// Clean output buffer
+			ob_end_clean();
+			
+			// Restore original error settings
+			@error_reporting($original_error_reporting);
+			@ini_set('display_errors', $original_display_errors);
 			
 			// Redirect with error message
 			wp_redirect( add_query_arg( 'export_status', 'error', wp_get_referer() ) );
@@ -454,7 +478,8 @@ class WBCOM_TDE_Generate_Demo_Data {
 		foreach ( $selected_post_types as $post_type_slug ) {
 			$args = array( 'content' => $post_type_slug );
 			ob_start();
-			export_wp( $args );
+			// Suppress any errors during XML export
+			@export_wp( $args );
 			$xml_content = ob_get_clean();
 			
 			$args = array(

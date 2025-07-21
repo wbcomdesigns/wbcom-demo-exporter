@@ -3,7 +3,7 @@
  * Plugin Name: Wbcom Theme Demo Exporter
  * Plugin URI: https://wbcomdesigns.com/
  * Description: Wbcom Theme Demo Exporter
- * Version: 2.1.0
+ * Version: 2.1.1
  * Author: Wbcom Designs
  * Author URI: https://wbcomdesigns.com/
  * Requires at least: 4.0
@@ -30,7 +30,7 @@ class WBCOM_Theme_Demo_Exporter {
 	 *
 	 * @var string
 	 */
-	public $version = '2.1.0';
+	public $version = '2.1.1';
 	/**
 	 * The single instance of the class.
 	 *
