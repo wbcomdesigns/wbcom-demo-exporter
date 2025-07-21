@@ -46,7 +46,16 @@ class WBCOM_TDE_Importer_Request_Handler {
 		add_action( 'init', array( $this, 'importer_request_handler' ) );
 	}
 	public function importer_request_handler() {
+		// For internal use - basic authentication check
 		if( isset( $_GET['wbcom_theme_demo_listing'] ) && ( $_GET['wbcom_theme_demo_listing'] == 'yes' ) ) {
+			
+			// Simple API key check for internal use
+			$api_key = isset( $_GET['api_key'] ) ? $_GET['api_key'] : '';
+			$valid_api_key = get_option( 'wbcom_exporter_api_key', 'demo-export-2024' ); // Default for internal use
+			
+			if ( $api_key !== $valid_api_key ) {
+				wp_die( 'Invalid API key', 'Unauthorized', array( 'response' => 401 ) );
+			}
 
 			if( isset( $_POST['theme_slug'] ) && isset( $_POST['demo_slug'] ) && isset( $_POST['plugins_list'] ) ) {
 				$theme_slug = $_POST['theme_slug'];

@@ -2,30 +2,22 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
+
 if ( ! class_exists( 'WBCOM_TDE_ADMIN_SETTINGS' ) ) :
 /**
- * @class WBCOM_TDE_ADMIN_SETTINGS
- * @version	1.0.0
+ * Admin Settings with Professional UI
+ * @version 2.0.0
  */
 class WBCOM_TDE_ADMIN_SETTINGS {
 	/**
 	 * The single instance of the class.
-	 *
-	 * @var WBCOM_TDE_ADMIN_SETTINGS
-	 * @since 1.0.0
 	 */
 	protected static $_instance = null;
 	protected static $_slug = 'wbcom-theme-demo-exporter';
 	protected static $_parent_dir = 'wbcom-theme-demos';
+	
 	/**
-	 * Main WBCOM_TDE_ADMIN_SETTINGS Instance.
-	 *
-	 * Ensures only one instance of WBCOM_TDE_ADMIN_SETTINGS is loaded or can be loaded.
-	 *
-	 * @since 1.0.0
-	 * @static
-	 * @see WBCOM_TDE_ADMIN_SETTINGS()
-	 * @return WBCOM_TDE_ADMIN_SETTINGS - Main instance.
+	 * Main Instance
 	 */
 	public static function instance() {
 		if ( is_null( self::$_instance ) ) {
@@ -33,110 +25,340 @@ class WBCOM_TDE_ADMIN_SETTINGS {
 		}
 		return self::$_instance;
 	}
+	
 	/**
-	 * WBCOM_TDE_ADMIN_SETTINGS Constructor.
+	 * Constructor
 	 */
 	public function __construct() {
 		$this->init_hooks();
 	}
+	
 	/**
 	 * Hook into actions and filters.
-	 * @since  1.0.0
 	 */
 	private function init_hooks() {
 		add_action( 'admin_menu', array( $this, 'add_admin_menu' ), 10 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ), 100 );
+		add_action( 'wp_ajax_wbcom_clear_export_history', array( $this, 'ajax_clear_history' ) );
 	}
+	
+	/**
+	 * Add admin menu
+	 */
 	public function add_admin_menu() {
 		add_menu_page(
-			$page_title	=	__( 'Theme Exporter', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ),
-			$menu_title	=	__( 'Theme Exporter', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ),
-			$capability	=	'manage_options',
-			$menu_slug	=	self::$_slug,
-			$function	=	array( $this, 'render_page_for_added_menu' ),
-			$icon_url	=	'',
-			$position	=	null
+			__( 'Demo Exporter', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ),
+			__( 'Demo Exporter', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ),
+			'manage_options',
+			self::$_slug,
+			array( $this, 'render_page_for_added_menu' ),
+			'dashicons-download',
+			80
 		);
 	}
+	
+	/**
+	 * Render admin page
+	 */
 	public function render_page_for_added_menu() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( __( 'You do not have sufficient permissions to access this page.', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ) );
+		}
+		
+		$api_key = get_option( 'wbcom_exporter_api_key', 'demo-export-2024' );
+		$last_export = get_option( 'wbcom_last_export_time' );
+		$export_history = get_option( 'wbcom_export_history', array() );
+		$site_url = home_url();
 		$theme_info = wp_get_theme();
-		$reflection = new ReflectionClass( $theme_info );
-		$property = $reflection->getProperty( 'headers' );
-		$property->setAccessible(true);
-		$theme_info = $property->getValue( $theme_info );
-		$pre_selected = false;
-		if( $pre_selected ) {
-			$pre_selected = 'selected="selected"';
-		}
-		else {
-			$pre_selected = '';
-		}
-		echo "<div class='wrap reign-theme-exporter'>";
-			echo "<form method='post'>";
-				echo "<div class='wp-list-table widefat fixed striped'>";
-					echo "<div class='select-folder'>";
-						echo "<h3><label>" . __( 'Select Uploads Folder', 'ASDF' ) . "</label></h3>";
-						echo "<div class='selected-folder'>";
-							$pre_selected = 'selected="selected"';
-							$upload = wp_upload_dir();
-							$upload_dir = $upload['basedir'];
-							$folders = array_diff( scandir( $upload_dir ), array( '..', '.' ) );
-							echo "<select name='selected_upload_folders[]' class='wbcom-demo-exporter-select2' multiple>";
-							foreach ( $folders as $folder ) {
-								echo "<option value='$folder' " . $pre_selected . ">" . $folder . "</option>";
-							}
-							echo "</select>";
-						echo "</div>";
-					echo "</div>";
-				echo "</div>";
-				echo "<input type='submit' name='wbcom_generate_theme_demo_data' value='". __( 'Generate', 'ASDF' ) ."' class='button button-primary' />";
-			echo "</form>";
-		echo "</div>";
+		?>
+		<div class="wrap wbcom-demo-exporter-wrap">
+			<h1><?php _e( 'Demo Content Exporter', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ); ?></h1>
+			
+			<?php 
+			// Show export status messages
+			if ( isset( $_GET['export_status'] ) ) {
+				if ( $_GET['export_status'] === 'success' ) {
+					echo '<div class="notice notice-success is-dismissible"><p><strong>' . __( 'Export completed successfully!', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ) . '</strong></p></div>';
+				} elseif ( $_GET['export_status'] === 'error' ) {
+					$error = get_transient( 'wbcom_export_error' );
+					echo '<div class="notice notice-error is-dismissible"><p><strong>' . __( 'Export failed!', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ) . '</strong> ' . esc_html( $error ) . '</p></div>';
+				}
+			}
+			?>
+			
+			<div class="wbcom-exporter-container">
+				
+				<!-- One-Click Export Card -->
+				<div class="card">
+					<h2><?php _e( 'Export Demo Content', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ); ?></h2>
+					
+					<?php if ( $last_export ) : ?>
+						<div class="export-status-info">
+							<p>
+								<span class="dashicons dashicons-yes-alt"></span>
+								<strong><?php _e( 'Last Export:', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ); ?></strong> 
+								<?php echo esc_html( human_time_diff( $last_export, current_time( 'timestamp' ) ) . ' ' . __( 'ago', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ) ); ?>
+							</p>
+						</div>
+					<?php endif; ?>
+					
+					<p class="description">
+						<?php _e( 'Click the button below to export all demo content. This will create a fresh export package with all necessary data.', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ); ?>
+					</p>
+					
+					<form method="post" id="export-form" action="">
+						<?php wp_nonce_field( 'wbcom_export_demo_nonce', '_wpnonce' ); ?>
+						
+						<!-- Hidden fields for theme info -->
+						<input type="hidden" name="theme_slug" value="<?php echo esc_attr( $theme_info->get( 'Name' ) ); ?>" />
+						<input type="hidden" name="demo_slug" value="Main Demo" />
+						<input type="hidden" name="wbcom_generate_theme_demo_data" value="1" />
+						
+						<div class="export-info">
+							<h4><?php _e( 'What will be exported:', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ); ?></h4>
+							<ul class="export-items">
+								<li><span class="dashicons dashicons-database"></span> <?php _e( 'All database content (posts, pages, menus, etc.)', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ); ?></li>
+								<li><span class="dashicons dashicons-admin-plugins"></span> <?php _e( 'Active plugins information', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ); ?></li>
+								<li><span class="dashicons dashicons-format-image"></span> <?php _e( 'Media files and uploads', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ); ?></li>
+								<li><span class="dashicons dashicons-admin-appearance"></span> <?php _e( 'Theme settings and customizations', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ); ?></li>
+							</ul>
+						</div>
+						
+						<p class="submit">
+							<button type="submit" class="button button-primary button-hero" id="export-button">
+								<span class="dashicons dashicons-download"></span> 
+								<?php _e( 'Export Demo Content', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ); ?>
+							</button>
+						</p>
+					</form>
+					
+					<!-- Progress Bar (hidden by default) -->
+					<div id="export-progress" style="display: none;">
+						<h4><?php _e( 'Export Progress', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ); ?></h4>
+						<div class="progress-bar">
+							<div class="progress-bar-fill" style="width: 0%;"></div>
+						</div>
+						<p class="progress-message"><?php _e( 'Starting export...', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ); ?></p>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<style>
+			.wbcom-demo-exporter-wrap {
+				max-width: 1200px;
+				margin: 20px auto;
+			}
+			
+			.wbcom-exporter-container {
+				margin-top: 20px;
+			}
+			
+			.wbcom-demo-exporter-wrap .card {
+				max-width: none;
+				margin-bottom: 20px;
+				padding: 20px;
+				box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+			}
+			
+			.wbcom-demo-exporter-wrap .card h2 {
+				margin-top: 0;
+				border-bottom: 1px solid #e1e1e1;
+				padding-bottom: 10px;
+			}
+			
+			.wbcom-code {
+				background: #f4f4f4;
+				padding: 8px 12px;
+				border-radius: 3px;
+				font-family: monospace;
+				display: inline-block;
+				margin-right: 10px;
+			}
+			
+			.copy-to-clipboard {
+				vertical-align: middle;
+			}
+			
+			.export-status-info {
+				background: #f0f8ff;
+				border-left: 4px solid #0073aa;
+				padding: 15px;
+				margin: 15px 0;
+			}
+			
+			.export-status-info .dashicons-yes-alt {
+				color: #46b450;
+				font-size: 20px;
+				vertical-align: middle;
+				margin-right: 5px;
+			}
+			
+			.no-export-yet {
+				background: #fff3cd;
+				border-left: 4px solid #ffb900;
+				padding: 15px;
+				margin: 15px 0;
+			}
+			
+			.no-export-yet .dashicons {
+				color: #ffb900;
+				vertical-align: middle;
+				margin-right: 5px;
+			}
+			
+			.export-info {
+				background: #f9f9f9;
+				border: 1px solid #e1e1e1;
+				border-radius: 3px;
+				padding: 20px;
+				margin: 20px 0;
+			}
+			
+			.export-info h4 {
+				margin-top: 0;
+			}
+			
+			.export-items {
+				list-style: none;
+				padding-left: 0;
+			}
+			
+			.export-items li {
+				padding: 5px 0;
+			}
+			
+			.export-items .dashicons {
+				color: #0073aa;
+				margin-right: 10px;
+				vertical-align: middle;
+			}
+			
+			.button-hero .dashicons {
+				font-size: 26px;
+				vertical-align: middle;
+				margin-right: 5px;
+			}
+			
+			.progress-bar {
+				width: 100%;
+				height: 30px;
+				background: #f0f0f0;
+				border-radius: 3px;
+				overflow: hidden;
+				margin: 10px 0;
+			}
+			
+			.progress-bar-fill {
+				height: 100%;
+				background: #0073aa;
+				transition: width 0.3s ease;
+				text-align: center;
+				line-height: 30px;
+				color: white;
+				font-weight: bold;
+			}
+			
+			.progress-message {
+				text-align: center;
+				color: #666;
+				font-style: italic;
+			}
+			
+			#clear-export-history .dashicons {
+				vertical-align: middle;
+				margin-right: 3px;
+			}
+			
+			.description {
+				color: #666;
+			}
+		</style>
+		
+		<script>
+		jQuery(document).ready(function($) {
+			// Export form handling - simple progress display
+			$('#export-form').submit(function(e) {
+				var $button = $('#export-button');
+				$button.prop('disabled', true).text('<?php _e( 'Exporting...', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ); ?>');
+			});
+		});
+		</script>
+		<?php
 	}
+	
+	/**
+	 * Enqueue admin scripts and styles
+	 */
 	public function admin_enqueue_scripts() {
 		$screen = get_current_screen();
-		if ( $screen->id != 'toplevel_page_wbcom-theme-demo-exporter' ) { return; }
+		if ( $screen->id != 'toplevel_page_' . self::$_slug ) {
+			return;
+		}
+		
+		// Enqueue WordPress admin styles
+		wp_enqueue_style( 'dashicons' );
+		
+		// Enqueue jQuery
+		wp_enqueue_script( 'jquery' );
+		
+		// Enqueue media if needed
 		wp_enqueue_media();
-		wp_register_script(
-			$handle		=	'wbcom_theme_demo_exporter_select2_js',
-			$src		=	WBCOM_Theme_Demo_Exporter_PLUGIN_DIR_URL . 'assets/js/select2.min.js',
-			$deps		=	array( 'jquery' ),
-			$ver		=	false,
-			$in_footer	=	true
-		);
-		wp_localize_script(
-			'wbcom_theme_demo_exporter_select2_js',
-			'wbcom_theme_demo_exporter_select2_params',
-			array(
-				'ajax_url' => admin_url( 'admin-ajax.php' )
-			)
-		);
-		wp_enqueue_script( 'wbcom_theme_demo_exporter_select2_js' );
-		wp_register_style(
-			$handle		=	'wbcom_theme_demo_exporter_select2_css',
-			$src		=	WBCOM_Theme_Demo_Exporter_PLUGIN_DIR_URL . 'assets/css/select2.min.css',
-			$deps		=	array(),
-			$ver		=	false,
-			$media		=	'all'
-		);
-		wp_enqueue_style( 'wbcom_theme_demo_exporter_select2_css' );
-
-		wp_enqueue_script( 'wbcom_theme_demo_exporter_select2_js' );
-		wp_register_style(
-			$handle		=	'wbcom_theme_demo_exporter_style_css',
-			$src		=	WBCOM_Theme_Demo_Exporter_PLUGIN_DIR_URL . 'assets/css/exporter_style.css',
-			$deps		=	array(),
-			$ver		=	false,
-			$media		=	'all'
-		);
-		wp_enqueue_style( 'wbcom_theme_demo_exporter_style_css' );
+		
+		// Enqueue Select2 if exists
+		if ( file_exists( WBCOM_Theme_Demo_Exporter_PLUGIN_DIR_PATH . 'assets/js/select2.min.js' ) ) {
+			wp_enqueue_script( 
+				'wbcom_theme_demo_exporter_select2_js',
+				WBCOM_Theme_Demo_Exporter_PLUGIN_DIR_URL . 'assets/js/select2.min.js',
+				array( 'jquery' ),
+				false,
+				true
+			);
+			
+			wp_localize_script(
+				'wbcom_theme_demo_exporter_select2_js',
+				'wbcom_theme_demo_exporter_select2_params',
+				array(
+					'ajax_url' => admin_url( 'admin-ajax.php' )
+				)
+			);
+		}
+		
+		// Enqueue Select2 CSS if exists
+		if ( file_exists( WBCOM_Theme_Demo_Exporter_PLUGIN_DIR_PATH . 'assets/css/select2.min.css' ) ) {
+			wp_enqueue_style( 
+				'wbcom_theme_demo_exporter_select2_css',
+				WBCOM_Theme_Demo_Exporter_PLUGIN_DIR_URL . 'assets/css/select2.min.css'
+			);
+		}
+		
+		// Enqueue custom style if exists
+		if ( file_exists( WBCOM_Theme_Demo_Exporter_PLUGIN_DIR_PATH . 'assets/css/exporter_style.css' ) ) {
+			wp_enqueue_style( 
+				'wbcom_theme_demo_exporter_style_css',
+				WBCOM_Theme_Demo_Exporter_PLUGIN_DIR_URL . 'assets/css/exporter_style.css'
+			);
+		}
+	}
+	
+	/**
+	 * AJAX handler to clear export history
+	 */
+	public function ajax_clear_history() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die();
+		}
+		
+		if ( ! wp_verify_nonce( $_POST['_wpnonce'], 'wbcom_clear_history' ) ) {
+			wp_die();
+		}
+		
+		update_option( 'wbcom_export_history', array() );
+		
+		wp_send_json_success();
 	}
 }
 endif;
-/**
- * Main instance of WBCOM_TDE_ADMIN_SETTINGS.
- * @since  1.0.0
- * @return WBCOM_TDE_ADMIN_SETTINGS
- */
+
+// Initialize
 WBCOM_TDE_ADMIN_SETTINGS::instance();
-?>
