@@ -242,12 +242,14 @@ class WBCOM_TDE_Generate_Demo_Data {
 			$this->saveContentToDemoPackage( $args, 'theme' );
 		}
 		
-		// Create demo directory (always fresh)
-		$upload_dir = $upload_dir . '/' . $demo_slug;
-		if ( is_dir( $upload_dir ) ) {
-			$this->recursiveRemoveDirectory( $upload_dir . '/' );
+		// Delete existing demo directory to ensure clean export
+		$demo_dir = $upload_dir . '/' . $demo_slug;
+		if ( is_dir( $demo_dir ) ) {
+			$this->recursiveRemoveDirectory( $demo_dir );
 		}
-		wp_mkdir_p( $upload_dir );
+		
+		// Create fresh demo directory
+		wp_mkdir_p( $demo_dir );
 		$args = array(
 			'content' => '<?php // Silence is golden',
 			'fileName' => 'index',
@@ -255,7 +257,7 @@ class WBCOM_TDE_Generate_Demo_Data {
 		);
 		$this->saveContentToDemoPackage( $args, 'demo' );
 		
-		return $upload_dir . '/';
+		return $demo_dir . '/';
 	}
 	
 	/**
