@@ -266,13 +266,20 @@ class WBCOM_TDE_Generate_Demo_Data {
 		$json_urls = array();
 		$upload_dir_url = $this->get_theme_demo_location( 'url' );
 		
-		// Default tables to export if none selected
-		$default_tables = array(
-			'posts', 'postmeta', 'terms', 'term_taxonomy', 'term_relationships',
-			'options', 'comments', 'commentmeta', 'links', 'termmeta'
-		);
+		// Get ALL tables from the database
+		$all_tables = $wpdb->get_col( "SHOW TABLES" );
+		$prefix_tables = array();
 		
-		$selected_database_tables = isset( $_POST['selected_database_tables'] ) ? $_POST['selected_database_tables'] : $default_tables;
+		// Extract table names without prefix for processing
+		foreach ( $all_tables as $table ) {
+			if ( strpos( $table, $wpdb->prefix ) === 0 ) {
+				$table_without_prefix = substr( $table, strlen( $wpdb->prefix ) );
+				$prefix_tables[] = $table_without_prefix;
+			}
+		}
+		
+		// Use all tables if none selected via POST
+		$selected_database_tables = isset( $_POST['selected_database_tables'] ) ? $_POST['selected_database_tables'] : $prefix_tables;
 		if( !is_array( $selected_database_tables ) ) {
 			$selected_database_tables = array( $selected_database_tables );
 		}
@@ -307,6 +314,10 @@ class WBCOM_TDE_Generate_Demo_Data {
 				if( !empty( $json_content ) && is_array( $json_content ) ) {
 					if ( $database_table == 'options' ) {
 						$json_content = $this->process_options_data( $json_content );
+					} elseif ( $database_table == 'users' ) {
+						$json_content = $this->process_users_data( $json_content );
+					} elseif ( $database_table == 'usermeta' ) {
+						$json_content = $this->process_usermeta_data( $json_content );
 					} else {
 						$json_content = $this->process_general_data( $json_content );
 					}
@@ -359,19 +370,27 @@ class WBCOM_TDE_Generate_Demo_Data {
 			'nonce_key', 'nonce_salt', 'wbcom_last_export_time'
 		);
 		
+		$upload_url = wp_upload_dir();
+		$upload_url = untrailingslashit( $upload_url['baseurl'] );
+		$upload_url_ssl = str_replace( 'http://', 'https://', $upload_url );
+		
 		foreach( $rows as $row ) {
 			// Check exclusions
 			$skip = false;
-			foreach ( $exclude as $pattern ) {
-				if ( strpos( $pattern, '%' ) !== false ) {
-					$pattern = str_replace( '%', '', $pattern );
-					if ( strpos( $row['option_name'], $pattern ) === 0 ) {
-						$skip = true;
-						break;
+			if ( isset( $row['option_name'] ) ) {
+				foreach ( $exclude as $pattern ) {
+					if ( strpos( $pattern, '%' ) !== false ) {
+						$pattern = str_replace( '%', '', $pattern );
+						if ( strpos( $row['option_name'], $pattern ) === 0 ) {
+							$skip = true;
+							break;
+						}
+					} else {
+						if ( $row['option_name'] == $pattern ) {
+							$skip = true;
+							break;
+						}
 					}
-				} elseif ( $row['option_name'] == $pattern ) {
-					$skip = true;
-					break;
 				}
 			}
 			
@@ -383,18 +402,32 @@ class WBCOM_TDE_Generate_Demo_Data {
 				
 				// Replace URLs in arrays and strings
 				if ( is_array( $option_value ) ) {
-					array_walk_recursive( $option_value, function( &$value ) use ( $home_url, $home_url_ssl ) {
+					array_walk_recursive( $option_value, function( &$value ) use ( $home_url, $home_url_ssl, $upload_url, $upload_url_ssl ) {
 						if ( is_string( $value ) ) {
+							// Replace upload URLs first to preserve paths
 							$value = str_replace( 
-								array( $home_url, $home_url_ssl ), 
+								array( $upload_url_ssl, $upload_url ), 
+								'{{*upload_url}}', 
+								$value 
+							);
+							// Then replace home URLs
+							$value = str_replace( 
+								array( $home_url_ssl, $home_url ), 
 								'{{*home_url}}', 
 								$value 
 							);
 						}
 					});
 				} elseif ( is_string( $option_value ) ) {
+					// Replace upload URLs first to preserve paths
 					$option_value = str_replace( 
-						array( $home_url, $home_url_ssl ), 
+						array( $upload_url_ssl, $upload_url ), 
+						'{{*upload_url}}', 
+						$option_value 
+					);
+					// Then replace home URLs
+					$option_value = str_replace( 
+						array( $home_url_ssl, $home_url ), 
 						'{{*home_url}}', 
 						$option_value 
 					);
@@ -415,20 +448,197 @@ class WBCOM_TDE_Generate_Demo_Data {
 	private function process_general_data( $rows ) {
 		$home_url = untrailingslashit( home_url() );
 		$home_url_ssl = str_replace( 'http://', 'https://', $home_url );
+		$upload_url = wp_upload_dir();
+		$upload_url = untrailingslashit( $upload_url['baseurl'] );
+		$upload_url_ssl = str_replace( 'http://', 'https://', $upload_url );
 		
 		foreach ( $rows as &$row ) {
 			foreach ( $row as $key => &$value ) {
-				if ( is_string( $value ) ) {
-					$value = str_replace( 
-						array( $home_url, $home_url_ssl ), 
-						'{{*home_url}}', 
-						$value 
-					);
+				if ( is_string( $value ) && !empty( $value ) ) {
+					// Check if it's serialized data
+					if ( is_serialized( $value ) ) {
+						$unserialized = maybe_unserialize( $value );
+						if ( is_array( $unserialized ) ) {
+							array_walk_recursive( $unserialized, function( &$item ) use ( $home_url, $home_url_ssl, $upload_url, $upload_url_ssl ) {
+								if ( is_string( $item ) ) {
+									// Replace upload URLs first
+									$item = str_replace( 
+										array( $upload_url_ssl, $upload_url ), 
+										'{{*upload_url}}', 
+										$item 
+									);
+									// Then home URLs
+									$item = str_replace( 
+										array( $home_url_ssl, $home_url ), 
+										'{{*home_url}}', 
+										$item 
+									);
+								}
+							});
+							$value = maybe_serialize( $unserialized );
+						} elseif ( is_string( $unserialized ) ) {
+							// Replace upload URLs first
+							$unserialized = str_replace( 
+								array( $upload_url_ssl, $upload_url ), 
+								'{{*upload_url}}', 
+								$unserialized 
+							);
+							// Then home URLs
+							$unserialized = str_replace( 
+								array( $home_url_ssl, $home_url ), 
+								'{{*home_url}}', 
+								$unserialized 
+							);
+							$value = maybe_serialize( $unserialized );
+						}
+					} else {
+						// Replace upload URLs first
+						$value = str_replace( 
+							array( $upload_url_ssl, $upload_url ), 
+							'{{*upload_url}}', 
+							$value 
+						);
+						// Then home URLs
+						$value = str_replace( 
+							array( $home_url_ssl, $home_url ), 
+							'{{*home_url}}', 
+							$value 
+						);
+					}
 				}
 			}
 		}
 		
 		return $rows;
+	}
+	
+	/**
+	 * Process users table data - sanitize sensitive information
+	 */
+	private function process_users_data( $rows ) {
+		$processed = array();
+		$home_url = untrailingslashit( home_url() );
+		$home_url_ssl = str_replace( 'http://', 'https://', $home_url );
+		
+		foreach ( $rows as $row ) {
+			// Sanitize sensitive user data
+			if ( isset( $row['user_pass'] ) ) {
+				// Set a default password that will need to be changed
+				$row['user_pass'] = wp_hash_password( 'demo123' );
+			}
+			
+			// Replace email with demo email
+			if ( isset( $row['user_email'] ) ) {
+				$username = isset( $row['user_login'] ) ? $row['user_login'] : 'user';
+				$row['user_email'] = $username . '@demo.local';
+			}
+			
+			// Replace URLs in user data
+			if ( isset( $row['user_url'] ) && !empty( $row['user_url'] ) ) {
+				$row['user_url'] = str_replace( 
+					array( $home_url_ssl, $home_url ), 
+					'{{*home_url}}', 
+					$row['user_url'] 
+				);
+			}
+			
+			// Clear activation key
+			if ( isset( $row['user_activation_key'] ) ) {
+				$row['user_activation_key'] = '';
+			}
+			
+			$processed[] = $row;
+		}
+		
+		return $processed;
+	}
+	
+	/**
+	 * Process usermeta table data - remove sensitive metadata
+	 */
+	private function process_usermeta_data( $rows ) {
+		$processed = array();
+		$home_url = untrailingslashit( home_url() );
+		$home_url_ssl = str_replace( 'http://', 'https://', $home_url );
+		$upload_url = wp_upload_dir();
+		$upload_url = untrailingslashit( $upload_url['baseurl'] );
+		$upload_url_ssl = str_replace( 'http://', 'https://', $upload_url );
+		
+		// Meta keys to exclude for security
+		$exclude_meta_keys = array(
+			'session_tokens',
+			'_woocommerce_persistent_cart_',
+			'community-events-location',
+			'dismissed_wp_pointers',
+			'show_welcome_panel',
+			'closedpostboxes_',
+			'metaboxhidden_',
+			'meta-box-order_',
+			'screen_layout_',
+			'wfls-last-login',
+			'use_ssl',
+			'_new_email',
+			'default_password_nag'
+		);
+		
+		foreach ( $rows as $row ) {
+			// Skip sensitive meta keys
+			$skip = false;
+			if ( isset( $row['meta_key'] ) ) {
+				foreach ( $exclude_meta_keys as $pattern ) {
+					if ( strpos( $row['meta_key'], $pattern ) === 0 ) {
+						$skip = true;
+						break;
+					}
+				}
+			}
+			
+			if ( $skip ) continue;
+			
+			// Process meta value
+			if ( isset( $row['meta_value'] ) ) {
+				$meta_value = maybe_unserialize( $row['meta_value'] );
+				
+				// Replace URLs in arrays and strings
+				if ( is_array( $meta_value ) ) {
+					array_walk_recursive( $meta_value, function( &$value ) use ( $home_url, $home_url_ssl, $upload_url, $upload_url_ssl ) {
+						if ( is_string( $value ) ) {
+							// Replace upload URLs first
+							$value = str_replace( 
+								array( $upload_url_ssl, $upload_url ), 
+								'{{*upload_url}}', 
+								$value 
+							);
+							// Then home URLs
+							$value = str_replace( 
+								array( $home_url_ssl, $home_url ), 
+								'{{*home_url}}', 
+								$value 
+							);
+						}
+					});
+				} elseif ( is_string( $meta_value ) ) {
+					// Replace upload URLs first
+					$meta_value = str_replace( 
+						array( $upload_url_ssl, $upload_url ), 
+						'{{*upload_url}}', 
+						$meta_value 
+					);
+					// Then home URLs
+					$meta_value = str_replace( 
+						array( $home_url_ssl, $home_url ), 
+						'{{*home_url}}', 
+						$meta_value 
+					);
+				}
+				
+				$row['meta_value'] = maybe_serialize( $meta_value );
+			}
+			
+			$processed[] = $row;
+		}
+		
+		return $processed;
 	}
 	
 	/**
