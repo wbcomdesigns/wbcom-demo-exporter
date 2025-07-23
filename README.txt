@@ -1,10 +1,10 @@
-=== WB Demo Exporter ===
+=== Reign Demo Exporter ===
 Contributors: wbcomdesigns
 Donate link: http://www.wbcomdesigns.com
 Tags: comments, spam
 Requires at least: 3.0.1
-Tested up to: 5.3.2
-Stable tag: 1.1.0
+Tested up to: 6.8.2
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -29,6 +29,13 @@ It will not work standalone and will need Wbcom Demo Importer plugin at slave si
 1. This screen shot description corresponds to screenshot-1.
 
 == Changelog ==
+= 1.2.0 =
+* New: Automatically cleans up the previous export folder before generating a new one.
+* New: Ensures all URLs remain unchanged—no replacements applied during export.
+* New: Now includes **all** database tables in the export and improves home URL handling.
+* Enhancement: Updated backend interface for better usability.
+* Fix: Removed debug logging and disabled debug mode in production builds.
+* Cleanup: Removed duplicate folder instances from export structure.
 
 = 1.1.0 =
 * Theme mod support updated.
