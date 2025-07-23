@@ -370,10 +370,6 @@ class WBCOM_TDE_Generate_Demo_Data {
 			'nonce_key', 'nonce_salt', 'wbcom_last_export_time'
 		);
 		
-		$upload_url = wp_upload_dir();
-		$upload_url = untrailingslashit( $upload_url['baseurl'] );
-		$upload_url_ssl = str_replace( 'http://', 'https://', $upload_url );
-		
 		foreach( $rows as $row ) {
 			// Check exclusions
 			$skip = false;
@@ -396,46 +392,6 @@ class WBCOM_TDE_Generate_Demo_Data {
 			
 			if ( $skip ) continue;
 			
-			// Process value
-			if ( isset( $row['option_value'] ) ) {
-				$option_value = maybe_unserialize( $row['option_value'] );
-				
-				// Replace URLs in arrays and strings
-				if ( is_array( $option_value ) ) {
-					array_walk_recursive( $option_value, function( &$value ) use ( $home_url, $home_url_ssl, $upload_url, $upload_url_ssl ) {
-						if ( is_string( $value ) ) {
-							// Replace upload URLs first to preserve paths
-							$value = str_replace( 
-								array( $upload_url_ssl, $upload_url ), 
-								'{{*upload_url}}', 
-								$value 
-							);
-							// Then replace home URLs
-							$value = str_replace( 
-								array( $home_url_ssl, $home_url ), 
-								'{{*home_url}}', 
-								$value 
-							);
-						}
-					});
-				} elseif ( is_string( $option_value ) ) {
-					// Replace upload URLs first to preserve paths
-					$option_value = str_replace( 
-						array( $upload_url_ssl, $upload_url ), 
-						'{{*upload_url}}', 
-						$option_value 
-					);
-					// Then replace home URLs
-					$option_value = str_replace( 
-						array( $home_url_ssl, $home_url ), 
-						'{{*home_url}}', 
-						$option_value 
-					);
-				}
-				
-				$row['option_value'] = maybe_serialize( $option_value );
-			}
-			
 			$processed[] = $row;
 		}
 		
@@ -446,69 +402,6 @@ class WBCOM_TDE_Generate_Demo_Data {
 	 * Process general table data
 	 */
 	private function process_general_data( $rows ) {
-		$home_url = untrailingslashit( home_url() );
-		$home_url_ssl = str_replace( 'http://', 'https://', $home_url );
-		$upload_url = wp_upload_dir();
-		$upload_url = untrailingslashit( $upload_url['baseurl'] );
-		$upload_url_ssl = str_replace( 'http://', 'https://', $upload_url );
-		
-		foreach ( $rows as &$row ) {
-			foreach ( $row as $key => &$value ) {
-				if ( is_string( $value ) && !empty( $value ) ) {
-					// Check if it's serialized data
-					if ( is_serialized( $value ) ) {
-						$unserialized = maybe_unserialize( $value );
-						if ( is_array( $unserialized ) ) {
-							array_walk_recursive( $unserialized, function( &$item ) use ( $home_url, $home_url_ssl, $upload_url, $upload_url_ssl ) {
-								if ( is_string( $item ) ) {
-									// Replace upload URLs first
-									$item = str_replace( 
-										array( $upload_url_ssl, $upload_url ), 
-										'{{*upload_url}}', 
-										$item 
-									);
-									// Then home URLs
-									$item = str_replace( 
-										array( $home_url_ssl, $home_url ), 
-										'{{*home_url}}', 
-										$item 
-									);
-								}
-							});
-							$value = maybe_serialize( $unserialized );
-						} elseif ( is_string( $unserialized ) ) {
-							// Replace upload URLs first
-							$unserialized = str_replace( 
-								array( $upload_url_ssl, $upload_url ), 
-								'{{*upload_url}}', 
-								$unserialized 
-							);
-							// Then home URLs
-							$unserialized = str_replace( 
-								array( $home_url_ssl, $home_url ), 
-								'{{*home_url}}', 
-								$unserialized 
-							);
-							$value = maybe_serialize( $unserialized );
-						}
-					} else {
-						// Replace upload URLs first
-						$value = str_replace( 
-							array( $upload_url_ssl, $upload_url ), 
-							'{{*upload_url}}', 
-							$value 
-						);
-						// Then home URLs
-						$value = str_replace( 
-							array( $home_url_ssl, $home_url ), 
-							'{{*home_url}}', 
-							$value 
-						);
-					}
-				}
-			}
-		}
-		
 		return $rows;
 	}
 	
@@ -517,8 +410,6 @@ class WBCOM_TDE_Generate_Demo_Data {
 	 */
 	private function process_users_data( $rows ) {
 		$processed = array();
-		$home_url = untrailingslashit( home_url() );
-		$home_url_ssl = str_replace( 'http://', 'https://', $home_url );
 		
 		foreach ( $rows as $row ) {
 			// Sanitize sensitive user data
@@ -531,15 +422,6 @@ class WBCOM_TDE_Generate_Demo_Data {
 			if ( isset( $row['user_email'] ) ) {
 				$username = isset( $row['user_login'] ) ? $row['user_login'] : 'user';
 				$row['user_email'] = $username . '@demo.local';
-			}
-			
-			// Replace URLs in user data
-			if ( isset( $row['user_url'] ) && !empty( $row['user_url'] ) ) {
-				$row['user_url'] = str_replace( 
-					array( $home_url_ssl, $home_url ), 
-					'{{*home_url}}', 
-					$row['user_url'] 
-				);
 			}
 			
 			// Clear activation key
@@ -558,11 +440,6 @@ class WBCOM_TDE_Generate_Demo_Data {
 	 */
 	private function process_usermeta_data( $rows ) {
 		$processed = array();
-		$home_url = untrailingslashit( home_url() );
-		$home_url_ssl = str_replace( 'http://', 'https://', $home_url );
-		$upload_url = wp_upload_dir();
-		$upload_url = untrailingslashit( $upload_url['baseurl'] );
-		$upload_url_ssl = str_replace( 'http://', 'https://', $upload_url );
 		
 		// Meta keys to exclude for security
 		$exclude_meta_keys = array(
@@ -594,46 +471,6 @@ class WBCOM_TDE_Generate_Demo_Data {
 			}
 			
 			if ( $skip ) continue;
-			
-			// Process meta value
-			if ( isset( $row['meta_value'] ) ) {
-				$meta_value = maybe_unserialize( $row['meta_value'] );
-				
-				// Replace URLs in arrays and strings
-				if ( is_array( $meta_value ) ) {
-					array_walk_recursive( $meta_value, function( &$value ) use ( $home_url, $home_url_ssl, $upload_url, $upload_url_ssl ) {
-						if ( is_string( $value ) ) {
-							// Replace upload URLs first
-							$value = str_replace( 
-								array( $upload_url_ssl, $upload_url ), 
-								'{{*upload_url}}', 
-								$value 
-							);
-							// Then home URLs
-							$value = str_replace( 
-								array( $home_url_ssl, $home_url ), 
-								'{{*home_url}}', 
-								$value 
-							);
-						}
-					});
-				} elseif ( is_string( $meta_value ) ) {
-					// Replace upload URLs first
-					$meta_value = str_replace( 
-						array( $upload_url_ssl, $upload_url ), 
-						'{{*upload_url}}', 
-						$meta_value 
-					);
-					// Then home URLs
-					$meta_value = str_replace( 
-						array( $home_url_ssl, $home_url ), 
-						'{{*home_url}}', 
-						$meta_value 
-					);
-				}
-				
-				$row['meta_value'] = maybe_serialize( $meta_value );
-			}
 			
 			$processed[] = $row;
 		}
