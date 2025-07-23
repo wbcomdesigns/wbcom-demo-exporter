@@ -3,7 +3,7 @@
  * Plugin Name: Reign Theme Demo Exporter
  * Plugin URI: https://wbcomdesigns.com/
  * Description: Wbcom Theme Demo Exporter
- * Version: 2.2.0
+ * Version: 1.2.0
  * Author: Wbcom Designs
  * Author URI: https://wbcomdesigns.com/
  * Requires at least: 4.0
