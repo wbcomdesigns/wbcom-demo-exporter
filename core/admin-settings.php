@@ -40,6 +40,7 @@ class WBCOM_TDE_ADMIN_SETTINGS {
 		add_action( 'admin_menu', array( $this, 'add_admin_menu' ), 10 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ), 100 );
 		add_action( 'wp_ajax_wbcom_clear_export_history', array( $this, 'ajax_clear_history' ) );
+		add_action( 'wp_ajax_wbcom_delete_export_folders', array( $this, 'ajax_delete_export_folders' ) );
 	}
 	
 	/**
@@ -128,6 +129,10 @@ class WBCOM_TDE_ADMIN_SETTINGS {
 							<button type="submit" class="button button-primary button-hero" id="export-button">
 								<span class="dashicons dashicons-download"></span> 
 								<?php _e( 'Export Demo Content', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ); ?>
+							</button>
+							<button type="button" class="button button-secondary button-hero" id="delete-export-folders">
+								<span class="dashicons dashicons-trash"></span> 
+								<?php _e( 'Delete Export Folders', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ); ?>
 							</button>
 						</p>
 					</form>
@@ -234,6 +239,12 @@ class WBCOM_TDE_ADMIN_SETTINGS {
 				vertical-align: middle;
 			}
 			
+			.button-hero {
+				height: 48px !important;
+				padding: 0 36px !important;
+				font-size: 16px !important;
+			}
+			
 			.button-hero .dashicons {
 				font-size: 26px;
 				vertical-align: middle;
@@ -273,6 +284,19 @@ class WBCOM_TDE_ADMIN_SETTINGS {
 			.description {
 				color: #666;
 			}
+			
+			#delete-export-folders {
+				margin-left: 10px;
+			}
+			
+			.dashicons.spin {
+				animation: spin 2s linear infinite;
+			}
+			
+			@keyframes spin {
+				0% { transform: rotate(0deg); }
+				100% { transform: rotate(360deg); }
+			}
 		</style>
 		
 		<script>
@@ -281,6 +305,41 @@ class WBCOM_TDE_ADMIN_SETTINGS {
 			$('#export-form').submit(function(e) {
 				var $button = $('#export-button');
 				$button.prop('disabled', true).text('<?php _e( 'Exporting...', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ); ?>');
+			});
+			
+			// Delete export folders
+			$('#delete-export-folders').click(function(e) {
+				e.preventDefault();
+				
+				if (!confirm('<?php _e( 'Are you sure you want to delete all export folders? This action cannot be undone.', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ); ?>')) {
+					return;
+				}
+				
+				var $button = $(this);
+				$button.prop('disabled', true).html('<span class="dashicons dashicons-update spin"></span> <?php _e( 'Deleting...', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ); ?>');
+				
+				$.ajax({
+					url: ajaxurl,
+					type: 'POST',
+					data: {
+						action: 'wbcom_delete_export_folders',
+						_wpnonce: '<?php echo wp_create_nonce( 'wbcom_delete_folders' ); ?>'
+					},
+					success: function(response) {
+						if (response.success) {
+							alert(response.data || '<?php _e( 'Export folders deleted successfully!', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ); ?>');
+							location.reload();
+						} else {
+							alert('<?php _e( 'Error deleting folders:', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ); ?> ' + (response.data || 'Unknown error'));
+						}
+					},
+					error: function(xhr, status, error) {
+						alert('<?php _e( 'Failed to delete export folders. Please try again.', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ); ?>');
+					},
+					complete: function() {
+						$button.prop('disabled', false).html('<span class="dashicons dashicons-trash"></span> <?php _e( 'Delete Export Folders', WBCOM_Theme_Demo_Exporter_TEXT_DOMAIN ); ?>');
+					}
+				});
 			});
 		});
 		</script>
@@ -356,6 +415,78 @@ class WBCOM_TDE_ADMIN_SETTINGS {
 		update_option( 'wbcom_export_history', array() );
 		
 		wp_send_json_success();
+	}
+	
+	/**
+	 * AJAX handler to delete export folders
+	 */
+	public function ajax_delete_export_folders() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( 'Insufficient permissions' );
+			return;
+		}
+		
+		if ( ! isset( $_POST['_wpnonce'] ) || ! wp_verify_nonce( $_POST['_wpnonce'], 'wbcom_delete_folders' ) ) {
+			wp_send_json_error( 'Security check failed' );
+			return;
+		}
+		
+		try {
+			$upload = wp_upload_dir();
+			$export_dir = $upload['basedir'] . '/' . self::$_parent_dir;
+			
+			if ( is_dir( $export_dir ) ) {
+				$this->recursiveRemoveDirectory( $export_dir );
+				
+				// Clear export history and last export time
+				update_option( 'wbcom_export_history', array() );
+				delete_option( 'wbcom_last_export_time' );
+				
+				wp_send_json_success( 'Export folders deleted successfully' );
+			} else {
+				wp_send_json_success( 'No export folders found' );
+			}
+		} catch ( Exception $e ) {
+			wp_send_json_error( 'Error: ' . $e->getMessage() );
+		}
+	}
+	
+	/**
+	 * Recursively remove directory
+	 */
+	private function recursiveRemoveDirectory( $directory ) {
+		if ( ! is_dir( $directory ) ) {
+			return;
+		}
+		
+		$files = glob( $directory . '/*' );
+		if ( $files === false ) {
+			return;
+		}
+		
+		foreach( $files as $file ) {
+			if( is_dir( $file ) ) {
+				$this->recursiveRemoveDirectory( $file );
+			} else {
+				@unlink( $file );
+			}
+		}
+		
+		// Also handle hidden files
+		$hidden_files = glob( $directory . '/.*' );
+		if ( $hidden_files !== false ) {
+			foreach( $hidden_files as $file ) {
+				if ( basename( $file ) != '.' && basename( $file ) != '..' ) {
+					if( is_dir( $file ) ) {
+						$this->recursiveRemoveDirectory( $file );
+					} else {
+						@unlink( $file );
+					}
+				}
+			}
+		}
+		
+		@rmdir( $directory );
 	}
 }
 endif;
