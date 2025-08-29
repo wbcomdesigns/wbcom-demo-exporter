@@ -198,6 +198,7 @@ class WBCOM_TDE_Importer_Request_Handler {
 				ob_end_clean();
 				header('Content-Type: application/json');
 				echo $retrieved_data;
+				die();
 			}
 			
 			// Clean buffer and die
